@@ -1,77 +1,105 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-def abonelik_analizi_yap(ay_sayisi=24):
-    aylar = np.arange(1, ay_sayisi + 1)
-    baslangic_fiyati = 100
 
-    # --- SENARYO 1: LİNEER ARTIŞ (Aritmetik Dizi) ---
-    # Her ay sabit 10 TL zam yapıldığını varsayıyoruz.
-    artis_miktari = 10
-    lineer_maliyetler = baslangic_fiyati + (aylar - 1) * artis_miktari
-    lineer_toplam = np.cumsum(lineer_maliyetler) # Kısmi toplamlar (Sn)
+def kapsamli_abonelik_analizi_final():
+    print("--- Düzenlenmiş Dijital Abonelik Maliyet Analizi ---")
 
-    # --- SENARYO 2: GEOMETRİK ARTIŞ (Enflasyonist Model) ---
-    # Her ay %5 zam yapıldığını varsayıyoruz (r = 1.05).
-    artis_orani = 1.05
-    geometrik_maliyetler = baslangic_fiyati * (artis_orani ** (aylar - 1))
-    geometrik_toplam = np.cumsum(geometrik_maliyetler) # Kısmi toplamlar (Sn)
+    # 1. Parametre Girişleri (Senaryon: Netflix, 150 TL, %25 Zam, 24 Ay)
+    platform_adi = input("Platform Adı (Örn: Netflix): ")
+    a = float(input("Başlangıç Aylık Ücreti (TL): "))
+    r_yillik = float(input("Tahmini Yıllık Zam Oranı (Örn: %25 için 0.25): "))
+    sure = int(input("Analiz Süresi (Ay): "))
 
-    # --- SENARYO 3: BASAMAKLI MODEL (İndirimli Başlangıç) ---
-    # İlk 6 ay 50 TL, sonraki aylar 180 TL sabit fiyat.
-    basamakli_maliyetler = np.where(aylar <= 6, 50, 180)
-    basamakli_toplam = np.cumsum(basamakli_maliyetler) # Kısmi toplamlar (Sn)
+    # Matematiksel Dönüşümler
+    r_aylik = 1 + (r_yillik / 12)
+    aylar = np.arange(1, sure + 1)
 
-    # --- GRAFİK ÇİZİMLERİ ---
-    plt.figure(figsize=(15, 10))
-    plt.suptitle(f"{ay_sayisi} Aylık Dijital Abonelik Maliyet Analizi", fontsize=16)
+    # Hesaplama Dizileri
+    aylik_maliyetler_zamli = []
+    kismi_toplamlar_zamli = []
+    kismi_toplamlar_sabit = []
+    hatali_kismi_toplamlar = []
 
-    # Grafik 1: Aylık Ödeme Miktarları Karşılaştırması
-    plt.subplot(2, 2, 1)
-    plt.plot(aylar, lineer_maliyetler, 'g-o', label='Lineer (+10 TL/Ay)')
-    plt.plot(aylar, geometrik_maliyetler, 'r-s', label='Geometrik (%5 Zam)')
-    plt.step(aylar, basamakli_maliyetler, 'b-', where='post', label='Basamaklı Model')
-    plt.title("Aylık Fiyat Değişimleri")
-    plt.xlabel("Ay")
-    plt.ylabel("Birim Fiyat (TL)")
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.legend()
+    total_zamli = 0
+    total_sabit = 0
+    total_zamli_hatali = 0
 
-    # Grafik 2: Birikimli Toplam Maliyet (Kısmi Toplamlar - Sn)
-    plt.subplot(2, 2, 2)
-    plt.fill_between(aylar, lineer_toplam, color="green", alpha=0.2, label='Lineer Toplam')
-    plt.fill_between(aylar, geometrik_toplam, color="red", alpha=0.2, label='Geometrik Toplam')
-    plt.fill_between(aylar, basamakli_toplam, color="blue", alpha=0.2, label='Basamaklı Toplam')
-    plt.plot(aylar, lineer_toplam, 'g--')
-    plt.plot(aylar, geometrik_toplam, 'r--')
-    plt.plot(aylar, basamakli_toplam, 'b--')
-    plt.title("Toplam Ödenen Miktar (Kısmi Toplamlar)")
-    plt.xlabel("Ay")
-    plt.ylabel("Toplam Maliyet (TL)")
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.legend()
+    # 2. Hesaplama Motoru
+    for ay in aylar:
+        # Parçalı Fonksiyon Modellemesi (İlk 3 ay indirimli senaryosu)
+        if ay <= 3:
+            guncel_maliyet = a * 0.6  # %40 indirimli dönem
+        else:
+            # Geometrik Seri Genel Terimi: a * r^(n-1)
+            guncel_maliyet = a * (r_aylik ** (ay - 1))
 
-    # Grafik 3: Model Farklarının Analizi (Geometrik vs Lineer Farkı)
-    plt.subplot(2, 2, (3, 4))
-    fark = geometrik_toplam - lineer_toplam
-    plt.bar(aylar, fark, color='orange', label='Maliyet Farkı (Geo - Lin)')
-    plt.axhline(0, color='black', linewidth=1)
-    plt.title("Geometrik ve Lineer Model Arasındaki Birikimli Maliyet Farkı")
-    plt.xlabel("Ay")
-    plt.ylabel("Fark (TL)")
-    plt.legend()
+        # Teknik Çözüm: Float hassasiyeti için yuvarlama
+        guncel_maliyet_round = round(guncel_maliyet, 2)
+        total_zamli += guncel_maliyet_round
 
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+        # Verileri Listelere Ekleme
+        aylik_maliyetler_zamli.append(guncel_maliyet_round)
+        kismi_toplamlar_zamli.append(round(total_zamli, 2))
+
+        # Karşılaştırma Senaryosu (Sabit Fiyat - Aritmetik Seri)
+        total_sabit += a
+        kismi_toplamlar_sabit.append(total_sabit)
+
+        # Hata Analizi Senaryosu (Yuvarlama olmadan birikim)
+        total_zamli_hatali += guncel_maliyet
+        hatali_kismi_toplamlar.append(total_zamli_hatali)
+
+    # 3. Görselleştirme (Düzenlenmiş Layout)
+    fig = plt.figure(figsize=(12, 10))
+    grid = plt.GridSpec(3, 2, wspace=0.3, hspace=0.5)
+
+    fig.suptitle(f'{platform_adi} Finansal Analiz ve Matematiksel Modelleme Raporu', fontsize=16, fontweight='bold')
+
+    # Grafik 1: Kısmi Toplam (Sn) Eğrisi
+    ax1 = fig.add_subplot(grid[0, :])
+    ax1.plot(aylar, kismi_toplamlar_zamli, color='red', marker='o', markersize=3, label='Birikimli Maliyet (Sn)')
+    ax1.fill_between(aylar, kismi_toplamlar_zamli, color='red', alpha=0.1)
+    ax1.set_title('1. Birikimli Maliyet Eğrisi (Kısmi Toplam Analizi)')
+    ax1.set_ylabel('Toplam Harcama (TL)')
+    ax1.grid(True, linestyle='--', alpha=0.6)
+    ax1.legend()
+
+    # Grafik 2: Senaryo Karşılaştırması
+    ax2 = fig.add_subplot(grid[1, 0])
+    ax2.plot(aylar, kismi_toplamlar_sabit, color='blue', linestyle='--', label='Sabit Fiyat (Aritmetik)')
+    ax2.plot(aylar, kismi_toplamlar_zamli, color='red', label='Zamlı (Geometrik)')
+    ax2.set_title('2. Aritmetik vs. Geometrik Karşılaştırma')
+    ax2.set_ylabel('Toplam Maliyet (TL)')
+    ax2.legend()
+
+    # Grafik 3: Parçalı Fonksiyon ve Basamaklı Yapı
+    ax3 = fig.add_subplot(grid[1, 1])
+    ax3.step(aylar, aylik_maliyetler_zamli, where='post', color='purple', label='Aylık Ödeme (Ayrık Veri)')
+    ax3.axvspan(1, 3, color='yellow', alpha=0.2, label='İndirimli Periyot')
+    ax3.set_title('3. Parçalı Fonksiyon ve Ayrık Veri Analizi')
+    ax3.set_ylabel('Aylık Ücret (TL)')
+    ax3.legend()
+
+    # Grafik 4: Teknik Hata Analizi (Sapma)
+    ax4 = fig.add_subplot(grid[2, :])
+    sapma = np.array(hatali_kismi_toplamlar) - np.array(kismi_toplamlar_zamli)
+    ax4.bar(aylar, sapma, color='gray', label='Birikimli Yuvarlama Farkı (Kuruş)')
+    ax4.set_title('4. Teknik Analiz: Float Hassasiyeti ve Birikimli Sapma')
+    ax4.set_xlabel('Zaman (Ay)')
+    ax4.set_ylabel('Sapma (TL)')
+    ax4.set_ylim(-0.05, 0.05)
+    ax4.legend()
+
+    # Manuel Yerleşim Düzenleme (Hata Veren tight_layout yerine)
+    plt.subplots_adjust(top=0.92, bottom=0.08, left=0.10, right=0.95, hspace=0.6, wspace=0.3)
+
+    print(f"\n--- Analiz Tamamlandı ---")
+    print(f"Toplam Süre: {sure} Ay")
+    print(f"Nihai Birikimli Maliyet: {kismi_toplamlar_zamli[-1]} TL")
+
     plt.show()
 
-    # Terminal Çıktıları
-    print("-" * 30)
-    print(f"{ay_sayisi} Ay Sonundaki Sonuçlar:")
-    print(f"Lineer Model Toplam: {lineer_toplam[-1]:.2f} TL")
-    print(f"Geometrik Model Toplam: {geometrik_toplam[-1]:.2f} TL")
-    print(f"Basamaklı Model Toplam: {basamakli_toplam[-1]:.2f} TL")
-    print("-" * 30)
 
-# Fonksiyonu çalıştır
 if __name__ == "__main__":
-    abonelik_analizi_yap(24)
+    kapsamli_abonelik_analizi_final()
