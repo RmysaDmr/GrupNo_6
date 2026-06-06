@@ -30,7 +30,9 @@ Adım 5: Programın Tetiklenmesi: Kurulum tamamlandıktan sonra ana scripti çal
 ```bash
 python nihai_proje_savunma_motoru.py
 ```
-📚 2. Programda Kullanılan Kütüphaneler ve Teknik İşlevleriProjede dış bağımlılık olarak kullanılan bilimsel kütüphaneler ve bunların matematiksel modelimizdeki birebir görevleri aşağıda detaylandırılmıştır:
+📚 2. Programda Kullanılan Kütüphaneler ve Teknik İşlevleri 
+
+Projede dış bağımlılık olarak kullanılan bilimsel kütüphaneler ve bunların matematiksel modelimizdeki birebir görevleri aşağıda detaylandırılmıştır:
 
 A) NumPy (Numerical Python)Vektörel Hesaplama Çekirdeği: Dönem süreçlerini ve ayları tek tek döngüye sokmak yerine, zaman parametresini ($n$) doğrusal bir vektör dizisi olarak işlemek için np.arange() fonksiyonu kullanılmıştır.Ayrık Veri Analizi: Analiz derslerinde teorik olarak işlenen "ayrık veri (discrete data)" kümelerinin bilgisayar belleğinde yüksek performanslı matrisler (Arrays) halinde tutulmasını sağlar.Hassasiyet Analizi: Float (kayan nokta) veri tipindeki kuruş bazlı sapmaları doğrulamak amacıyla matrisel fark işlemlerinde (np.array() dönüşümleriyle) aktif rol oynamıştır.
 
